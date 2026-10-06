@@ -4,7 +4,9 @@
 
 ## دانلود و اجرا
 
-فایل **`SystemOptimizer.exe`** در همین پوشه، خروجی مستقل ویندوز است و به نصب جداگانهٔ .NET نیاز ندارد. فایل را دانلود و اجرا کنید؛ ویندوز درخواست دسترسی Administrator نشان می‌دهد. برنامه امضای دیجیتال ندارد.
+فایل **`SystemOptimizer.exe`** در همین پوشه، خروجی کم‌حجم ویندوز است و به **.NET 10 Desktop Runtime x64** نیاز دارد. [صفحهٔ رسمی دانلود .NET 10](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) را باز کنید و در بخش **.NET Desktop Runtime**، نسخهٔ **Windows x64** را نصب کنید؛ نصب ASP.NET Runtime به‌تنهایی کافی نیست. سپس فایل EXE را دانلود و اجرا کنید؛ ویندوز درخواست دسترسی Administrator نشان می‌دهد. برنامه امضای دیجیتال ندارد.
+
+خروجی مستقل از runtime نیز با موفقیت ساخته شد، اما انتقال فایل حدود ۵۰ مگابایتی آن از این محیط با محدودیت حجم روبه‌رو شد. فایل منتشرشده در این پوشه نسخهٔ نیازمند runtime است. دستور ساخت نسخهٔ مستقل پایین آمده است.
 
 هیچ گزینه‌ای در شروع انتخاب نشده است. گزینه‌ها را انتخاب کنید، توضیحات هشدار را بخوانید و در صورت تمایل تأیید کنید. پیش‌فرض تأیید **خیر** است. هنگام اجرای عملیات، تغییر گزینه‌ها و بستن پنجره مسدود می‌شود تا نتیجه ثبت شود.
 
@@ -37,10 +39,16 @@ SDK تعیین‌شده در `global.json`، یعنی **.NET SDK 10.0.401** را
 
 ```powershell
 dotnet run --project tests/SystemOptimizer.Tests -c Release
-dotnet publish src/SystemOptimizer.Windows -c Release -r win-x64 --self-contained true -o artifacts/win-x64
+dotnet publish src/SystemOptimizer.Windows -c Release -r win-x64 --self-contained false -p:EnableCompressionInSingleFile=false -o artifacts/framework-dependent
 ```
 
-این دو فرمان را پشت سر هم اجرا کنید؛ اجرای هم‌زمان آن‌ها می‌تواند روی خروجی مشترک کتابخانهٔ Core تداخل ایجاد کند. خروجی قابل اجرا `artifacts/win-x64/SystemOptimizer.exe` است. پروژه به بستهٔ جانبی NuGet وابسته نیست؛ SDK هنگام restore بسته‌های رسمی هدف‌گذاری و runtime ویندوز را دریافت می‌کند. `EnableWindowsTargeting` ساخت فایل ویندوز را از لینوکس هم ممکن می‌کند.
+این دو فرمان را پشت سر هم اجرا کنید؛ اجرای هم‌زمان آن‌ها می‌تواند روی خروجی مشترک کتابخانهٔ Core تداخل ایجاد کند. خروجی قابل اجرا `artifacts/framework-dependent/SystemOptimizer.exe` است. پروژه به بستهٔ جانبی NuGet وابسته نیست؛ SDK هنگام restore بسته‌های رسمی هدف‌گذاری ویندوز را دریافت می‌کند. `EnableWindowsTargeting` ساخت فایل ویندوز را از لینوکس هم ممکن می‌کند.
+
+برای ساخت نسخهٔ بزرگ‌تر که به نصب جداگانهٔ runtime نیاز ندارد:
+
+```powershell
+dotnet publish src/SystemOptimizer.Windows -c Release -r win-x64 --self-contained true -o artifacts/win-x64
+```
 
 ## آزمون و محدودیت تأیید
 
