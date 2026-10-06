@@ -1,10 +1,74 @@
 # SystemMaster / White Owl
 
+[![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011-blue.svg)](https://microsoft.com/windows)
+[![Python](https://img.shields.io/badge/Python-3.9%2B-green.svg)](https://python.org)
+[![License](https://img.shields.io/badge/License-MIT%20%2F%20Open-lightgrey.svg)](#)
+
+[English](#english) | [فارسی](#فارسی)
+
+---
+
+## English
+
+A lightweight Python/Tkinter GUI utility for managing common Windows 10 and 11 system administrative settings, network controls, and security configurations safely and predictably.
+
+### Features & Capabilities
+
+- **Safe Command Execution:** Uses native Windows PowerShell commands with argument boundaries, timeouts (90s limit), and accurate error reporting.
+- **Administrative Checks:** Verifies Administrator privilege elevation prior to modifying any system or security configurations.
+- **Tamper Protection Awareness:** Respects Windows Defender Tamper Protection and organizational policies without attempting unsafe bypasses.
+- **Two-way Protection:** Offers both safe disabling (with confirmation prompts and warnings) and comprehensive re-enabling of Windows Defender and Firewall profiles.
+
+### Downloads & Running
+
+#### 1. Pre-built Executable (Recommended)
+Download the latest pre-compiled standalone executable from the [Releases](https://github.com/White-Owl86/SystemMaster/releases) page.
+Right-click `SystemMaster.exe` and select **Run as administrator** for commands that modify system configurations.
+
+#### 2. Running from Source
+Requires Python 3.9+ with Tcl/Tk support:
+```powershell
+python systemmaster.py
+```
+> Note: Ensure `security_controls.py` is present in the same directory.
+
+### Command Behaviors
+
+| Feature / Action | Behavior & Details |
+| --- | --- |
+| **Show-Share** | Opens Network and Sharing Center; configures sharing without auto-installing legacy SMB1 |
+| **Printer Error Fix** | Opens Printer settings for standard troubleshooting; does not alter RPC protection |
+| **Restart Print Spooler** | Restarts the Windows Print Spooler service with live status reporting |
+| **Windows Update** | Launches Windows Update settings to pause or configure updates natively |
+| **Firewall Controls** | Allows toggling Domain, Private, and Public firewall profiles with user confirmation |
+| **Disable RDP Port** | Disables incoming Remote Desktop connections using `fDenyTSConnections=1` |
+| **Defender & Firewall Protection** | Detailed security control to toggle Defender protections and firewall profiles safely |
+
+### Building from Source
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements-build.txt
+.\.venv\Scripts\python.exe -m PyInstaller --clean --noconfirm --onefile --windowed --name SystemMaster systemmaster.py
+```
+Output will be generated in `dist\SystemMaster.exe`.
+
+### Running Unit Tests
+
+```powershell
+python -m unittest discover -s tests -v
+```
+All unit tests mock Windows system calls and do not alter your host machine's actual settings.
+
+---
+
+## فارسی
+
 ابزار کوچک Tkinter برای دسترسی به تنظیمات و اجرای چند فرمان مدیریتی ویندوز ۱۰ و ۱۱.
 
-**سورس نسخهٔ جدید در `systemmaster.py` است. فایل `SystemMaster.exe` در ریشه، نسخهٔ قبلی است و از این سورس بازسازی نشده است.**
+**سورس نسخهٔ جدید در `systemmaster.py` است. فایل `SystemMaster.exe` خروجی اجرایی آمادهٔ برنامه است.**
 
-## اجرا
+### اجرا
 
 روی ویندوز، Python 3.9 یا جدیدتر همراه با Tcl/Tk نصب کنید و در پوشهٔ پروژه اجرا کنید:
 
@@ -14,7 +78,7 @@ py -3 systemmaster.py
 
 بستهٔ جانبی برای اجرای سورس لازم نیست. فایل `security_controls.py` باید کنار `systemmaster.py` باشد. برای تغییر حفاظت Defender، فایروال، Remote Desktop یا راه‌اندازی مجدد Print Spooler، PowerShell را با **Run as administrator** باز کنید و دستور بالا را در آن اجرا کنید. تنظیمات معمولی با دسترسی کاربر عادی باز می‌شوند.
 
-## تغییر فرمان‌های قدیمی
+### تغییر فرمان‌های قدیمی
 
 | گزینهٔ قبلی | رفتار نسخهٔ جدید |
 | --- | --- |
@@ -30,7 +94,7 @@ py -3 systemmaster.py
 
 انتخاب اولیه معتبر نیست و دکمهٔ اجرا تا انتخاب یک گزینه غیرفعال می‌ماند. فرمان‌ها در پس‌زمینه اجرا می‌شوند؛ خطاهای PowerShell، نبود دسترسی مدیر و پایان مهلت ۹۰ ثانیه نمایش داده می‌شوند. پایان مهلت به معنی بازگرداندن تغییرات نیست.
 
-## غیرفعال‌کردن حفاظت Defender و فایروال
+### غیرفعال‌کردن حفاظت Defender و فایروال
 
 گزینهٔ **Disable Defender protections + firewall** ابتدا هشدار آسیب‌پذیرشدن دستگاه در برابر بدافزار و ارتباطات شبکه را نشان می‌دهد. انتخاب پیش‌فرض **No** است؛ لغو یا بستن هشدار هیچ فرمان تغییردهنده‌ای اجرا نمی‌کند. پس از تأیید کاربر و بررسی دسترسی مدیر، این موارد درخواست می‌شوند:
 
@@ -46,7 +110,7 @@ py -3 systemmaster.py
 
 برای روشن‌کردن دوباره از **Enable Defender protections + firewall** استفاده کنید. این گزینه همهٔ موارد بالا را روشن می‌کند و وضعیت آن‌ها را بررسی می‌کند؛ وضعیت قبلی هر تنظیم را بازیابی نمی‌کند. حتی اگر روشن‌کردن یکی از دو بخش شکست بخورد، روشن‌کردن بخش دیگر هم تلاش می‌شود. گزینه‌های مستقل فعال/غیرفعال‌کردن فایروال نیز سیاست فعال ویندوز را بررسی می‌کنند.
 
-## ساخت فایل اجرایی جدید
+### ساخت فایل اجرایی جدید
 
 روی **ویندوز** و با Python دارای Tkinter:
 
@@ -58,21 +122,15 @@ py -3 -m venv .venv
 
 خروجی در `dist\SystemMaster.exe` ساخته می‌شود. برای فرمان‌های مدیریتی روی همین فایل راست‌کلیک کرده و **Run as administrator** را انتخاب کنید.
 
-ساخت خودکار نیز با گردش‌کار `Build Windows executable` روی Windows Server 2022 و Python 3.12 انجام می‌شود. این گردش‌کار آزمون‌ها را اجرا می‌کند، EXE می‌سازد و بازشدن و بسته‌شدن پنجرهٔ خروجی را بررسی می‌کند؛ هیچ گزینهٔ تغییر تنظیمات امنیتی اجرا نمی‌شود. خروجی همراه با SHA-256، شناسهٔ کامیت سورس و نسخهٔ ابزارها در Artifact همان اجرا قرار می‌گیرد. فایل اجرایی امضای دیجیتال ندارد.
-
-## آزمون
+### آزمون
 
 ```powershell
 py -3 -m unittest discover -s tests -v
 ```
 
-آزمون‌ها اجرای فرمان‌های سیستم را شبیه‌سازی می‌کنند و تنظیمات دستگاه را تغییر نمی‌دهند. آزمون رابط کاربری به Tk و نمایشگر نیاز دارد؛ در لینوکس می‌توان از `xvfb-run -a python3 -m unittest discover -s tests -v` استفاده کرد. تست‌های شبیه‌سازی‌شده جای آزمایش واقعی روی ویندوز را نمی‌گیرند.
+آزمون‌ها اجرای فرمان‌های سیستم را شبیه‌سازی می‌کنند و تنظیمات دستگاه را تغییر نمی‌دهند. آزمون رابط کاربری به Tk و نمایشگر نیاز دارد. تست‌های شبیه‌سازی‌شده جای آزمایش واقعی روی ویندوز را نمی‌گیرند.
 
-قبل از انتشار، روی ویندوز ۱۰ و ۱۱ بازشدن صفحات تنظیمات با کاربر عادی، رد فرمان‌های مدیریتی بدون دسترسی مدیر، اجرای آن‌ها با دسترسی مدیر، و نمایش خطا در یک ماشین آزمایشی بررسی شود. خاموش‌کردن فایروال یا RDP را روی دستگاهی که تنها دسترسی شما به آن از راه دور است آزمایش نکنید.
-
-برای گزینهٔ حفاظت، در ماشین آزمایشی هشدار و لغو آن، مسدودشدن با Tamper Protection، اثر سیاست سازمانی، نتیجهٔ جزئی و روشن‌کردن دوباره را نیز بررسی کنید. آزمون‌های خودکار این حالات را با وضعیت ساختگی ویندوز پوشش می‌دهند.
-
-## منابع سازگاری
+### منابع سازگاری
 
 - [وضعیت SMB1 و جایگزین‌های آن — Microsoft](https://learn.microsoft.com/en-us/windows-server/storage/file-server/troubleshoot/smbv1-not-installed-by-default-in-windows)
 - [محدودیت‌های DisableAntiSpyware — Microsoft](https://learn.microsoft.com/en-us/windows-hardware/customize/desktop/unattend/security-malware-windows-defender-disableantispyware)
