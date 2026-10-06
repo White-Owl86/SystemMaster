@@ -69,6 +69,23 @@ class CommandTests(unittest.TestCase):
         run.assert_called_once_with(action.script)
 
     @patch.object(sm.sys, "platform", "win32")
+    @patch.object(sm, "is_admin", return_value=False)
+    @patch.object(sm.security_controls, "set_protections")
+    def test_security_action_requires_admin(self, change, _admin):
+        with self.assertRaisesRegex(sm.CommandError, "administrator access"):
+            sm.execute_action(sm.ACTION_BY_LABEL["Disable Defender protections + firewall"])
+        change.assert_not_called()
+
+    @patch.object(sm.sys, "platform", "win32")
+    @patch.object(sm, "is_admin", return_value=True)
+    @patch.object(sm.security_controls, "set_protections", return_value="Verified")
+    def test_security_action_dispatches_requested_state(self, change, _admin):
+        for label, enabled in (("Disable Defender protections + firewall", False),
+                               ("Enable Defender protections + firewall", True)):
+            self.assertEqual(sm.execute_action(sm.ACTION_BY_LABEL[label]), "Verified")
+            change.assert_called_with(enabled, sm.run_powershell)
+
+    @patch.object(sm.sys, "platform", "win32")
     @patch.object(sm.os, "startfile", create=True)
     @patch.object(sm, "is_admin", return_value=False)
     def test_settings_work_without_admin(self, _admin, startfile):
@@ -129,11 +146,29 @@ class GuiTests(unittest.TestCase):
     @patch.object(sm, "is_admin", return_value=True)
     @patch.object(sm.threading, "Thread")
     def test_cancel_dangerous_action(self, thread, _admin, confirm):
-        self.select("Disable Windows Firewall")
-        self.app.execute()
-        confirm.assert_called_once()
+        for label in ("Disable Windows Firewall", "Disable Defender protections + firewall"):
+            self.select(label)
+            self.app.execute()
+            self.assertEqual(confirm.call_args.kwargs["default"], sm.messagebox.NO)
         thread.assert_not_called()
         self.assertFalse(self.app.busy)
+
+    @patch.object(sm, "is_admin", return_value=True)
+    @patch.object(sm.threading, "Thread")
+    def test_warning_precedes_security_worker(self, thread, _admin):
+        def confirm(*args, **kwargs):
+            thread.assert_not_called()
+            self.assertFalse(self.app.busy)
+            self.assertIn("ALL firewall profiles", args[1])
+            self.assertIn("malware", args[1])
+            self.assertEqual(kwargs["default"], sm.messagebox.NO)
+            return True
+
+        with patch.object(sm.messagebox, "askyesno", side_effect=confirm):
+            self.select("Disable Defender protections + firewall")
+            self.app.execute()
+        thread.assert_called_once()
+        self.assertTrue(self.app.busy)
 
     @patch.object(sm.messagebox, "showinfo")
     @patch.object(sm.threading, "Thread")

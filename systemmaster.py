@@ -11,6 +11,9 @@ import threading
 import tkinter as tk
 from tkinter import messagebox, ttk
 from dataclasses import dataclass
+from typing import Optional
+
+import security_controls
 
 
 @dataclass(frozen=True)
@@ -21,6 +24,8 @@ class Action:
     uri: str = ""
     admin: bool = False
     confirmation: str = ""
+    protections_enabled: Optional[bool] = None
+    firewall_enabled: Optional[bool] = None
 
 
 ACTIONS = (
@@ -50,13 +55,13 @@ ACTIONS = (
     Action(
         "Enable Windows Firewall",
         "Enable the Domain, Private and Public firewall profiles.",
-        script="Set-NetFirewallProfile -Profile Domain,Private,Public -Enabled True -ErrorAction Stop",
+        firewall_enabled=True,
         admin=True,
     ),
     Action(
         "Disable Windows Firewall",
         "Disable all firewall profiles. Use Enable Windows Firewall to turn them back on.",
-        script="Set-NetFirewallProfile -Profile Domain,Private,Public -Enabled False -ErrorAction Stop",
+        firewall_enabled=False,
         admin=True,
         confirmation="Turn off the firewall for ALL network profiles? "
         "This removes firewall protection, including on public networks.",
@@ -69,6 +74,30 @@ ACTIONS = (
         admin=True,
         confirmation="Disable incoming Remote Desktop connections? "
         "You may lose remote access to this PC. Organization policy can override this setting.",
+    ),
+    Action(
+        "Disable Defender protections + firewall",
+        "Turn off Defender real-time, behavior, downloaded-file and script checks, "
+        "plus all firewall profiles. Windows may block or revert these changes.",
+        admin=True,
+        protections_enabled=False,
+        confirmation=(
+            "WARNING: This turns off Defender real-time monitoring, behavior monitoring, "
+            "downloaded-file checks, script scanning and ALL firewall profiles.\n\n"
+            "Your PC will be exposed to malware and unwanted network connections, "
+            "including on public networks. Some settings may change even if the action fails.\n\n"
+            "This does not uninstall Defender or disable every Windows security feature. "
+            "Windows may restore protection automatically.\n\n"
+            "Use 'Enable Defender protections + firewall' to turn these protections back on.\n\n"
+            "Do you want to disable these protections?"
+        ),
+    ),
+    Action(
+        "Enable Defender protections + firewall",
+        "Turn on Defender real-time, behavior, downloaded-file and script checks, "
+        "plus all firewall profiles. This enables them all, regardless of their previous state.",
+        admin=True,
+        protections_enabled=True,
     ),
     Action(
         "Open Windows Security",
@@ -139,6 +168,10 @@ def execute_action(action):
     if action.admin and not is_admin():
         raise CommandError("This action requires administrator access. Close SystemMaster "
                            "and launch it with Run as administrator, then try again.")
+    if action.protections_enabled is not None:
+        return security_controls.set_protections(action.protections_enabled, run_powershell)
+    if action.firewall_enabled is not None:
+        return security_controls.set_firewall(action.firewall_enabled, run_powershell)
     if action.uri:
         try:
             os.startfile(action.uri)
@@ -194,7 +227,9 @@ class SystemMasterApp:
                                  "Launch SystemMaster with Run as administrator to use this action.",
                                  parent=self.root)
             return
-        if action.confirmation and not messagebox.askyesno("Confirm change", action.confirmation, parent=self.root):
+        if action.confirmation and not messagebox.askyesno(
+            "Confirm change", action.confirmation, parent=self.root, default=messagebox.NO
+        ):
             return
         self.busy = True
         self.menu.configure(state="disabled")
